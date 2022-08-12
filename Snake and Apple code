@@ -1,0 +1,166 @@
+## Snake and Apple pygame ##
+## Created by VTank01 ##
+## This is a snake and apple game. When game over click 'space' to try again and 'q' to quit ##
+
+import pygame
+import time
+import random
+
+############################################
+snake_speed = 17
+
+#size of the window
+wind_x = 700
+wind_y = 500
+
+#colors
+black = pygame.Color(0,0,0)
+white = pygame.Color(255, 255, 255)
+red = pygame.Color(255, 0, 0)
+green = pygame.Color(0, 255, 0)
+blue = pygame.Color(0, 0, 255)
+
+#make game window
+pygame.init()
+pygame.display.set_caption('Snake and Apple')
+game_wind = pygame.display.set_mode((wind_x, wind_y))
+
+#setting the fps
+fps = pygame.time.Clock()
+
+#snake position
+snake_position = [100, 50]
+
+#define snake body
+snake_body = [[100,50],[90,50], [80,50], [70,50]]
+
+#position of fruit
+fruit_position = [random.randrange(1, (wind_x//10)) *10, random.randrange(1, (wind_y//10)) *10]
+spawn_fruit = True
+
+#default snake direction
+direction = 'RIGHT'
+change_to = direction
+
+#default score
+score = 0
+gameover = False
+
+#when game is over
+def game_over():
+    global gameover
+    gameover = True
+    #create game font
+    your_font = pygame.font.SysFont('times new roman', 30)
+    #create text surface
+    game_over_surface = your_font.render('GAME OVER. YOUR SCORE : ' + str(score), True, red)
+    display_restart = your_font.render('Press Space to restart and q to quit', True, white)
+    #create object surface to show text
+    game_over_rect = game_over_surface.get_rect()
+    #set position of text
+    game_over_rect.midtop = (wind_x/2, wind_y/4)
+    #blit will draw text
+    game_wind.blit(game_over_surface, game_over_rect)
+    game_wind.blit(display_restart, (10,400))
+    pygame.display.flip()
+
+    #we quit after 2 seconds
+    time.sleep(2)
+
+
+#display score
+def show_score(choice, color, font, size):
+    #create font object
+    score_font = pygame.font.SysFont(font, size)
+    #create text surface object
+    score_surface = score_font.render('SCORE : ' + str(score), True, color)
+    #create object surface to show text score
+    score_rect = score_surface.get_rect()
+    #display the text using blit
+    game_wind.blit(score_surface, score_rect)
+
+
+# this is main function/assign keys and directons and calling functions
+while True:
+    #handle keys
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                change_to = 'UP'
+            if event.key == pygame.K_DOWN:
+                change_to = 'DOWN'
+            if event.key == pygame.K_LEFT:
+                change_to = 'LEFT'
+            if event.key == pygame.K_RIGHT:
+                change_to = 'RIGHT'
+            if event.key == pygame.K_SPACE and gameover:
+                snake_position = [100, 50]
+                fruit_position = [random.randrange(1, (wind_x//10)) *10, random.randrange(1, (wind_y//10)) *10]
+                direction = 'RIGHT'
+                change_to = direction
+                score = 0
+                gameover = False
+            if event.key == pygame.K_q and gameover:
+                    pygame.quit()
+                    quit()
+
+
+    # If two keys pressed simultaneously
+    # we don't want snake to move into two directions at the same time
+    if change_to == 'UP' and direction != 'DOWN':
+        direction = 'UP'
+    if change_to == 'DOWN' and direction != 'UP':
+        direction = 'DOWN'
+    if change_to == 'LEFT' and direction != 'RIGHT':
+        direction = 'LEFT'
+    if change_to == 'RIGHT' and direction != 'LEFT':
+        direction = 'RIGHT'
+
+    # Moving Snake
+    if direction == 'UP':
+        snake_position[1] -= 10
+    if direction == 'DOWN':
+        snake_position[1] += 10
+    if direction == 'LEFT':
+        snake_position[0] -= 10
+    if direction == 'RIGHT':
+        snake_position[0] += 10
+    
+    #Snake body growing
+    snake_body.insert(0, list(snake_position))
+    if snake_position[0] == fruit_position[0] and snake_position[1] == fruit_position[1]:
+        score += 10
+        spawn_fruit = False
+    else:
+        snake_body.pop()
+    
+    if not spawn_fruit:
+        fruit_position = [random.randrange(1, (wind_x//10)) *10, random.randrange(1, (wind_y//10)) *10]
+
+    spawn_fruit = True
+    game_wind.fill(black)
+
+    for pos in snake_body:
+        pygame.draw.rect(game_wind, white, pygame.Rect(pos[0], pos[1], 10, 10))
+
+    pygame.draw.rect(game_wind, red, pygame.Rect(fruit_position[0], fruit_position[1], 10, 10))
+
+    # Game Over conditions
+    if snake_position[0] < 0 or snake_position[0] > wind_x-10:
+        game_over()
+    if snake_position[1] < 0 or snake_position[1] > wind_y-10:
+        game_over()
+    
+    # Touching the snake body
+    for block in snake_body[1:]:
+        if snake_position[0] == block[0] and snake_position[1] == block[1]:
+            game_over()
+    
+    # displaying score countinuously
+    show_score(1, white, 'times new roman', 20)
+    
+    # Refresh game screen
+    pygame.display.update()
+
+    # Frame Per Second /Refresh Rate
+    fps.tick(snake_speed)
